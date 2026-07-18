@@ -1,0 +1,65 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: stride_db
+      POSTGRES_USER: stride
+      POSTGRES_PASSWORD: stride
+    volumes:
+      - stride_postgres:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stride -d stride_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://stride:stride@db:5432/stride_db
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+      API_KEY: ${API_KEY:-}
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen2.5:1.5b
+      MODEL_REQUEST_TIMEOUT: 120
+      CONVERSATIONAL_MODEL_ENABLED: "true"
+      LANGGRAPH_POSTGRES_CHECKPOINTER: "true"
+      EMBEDDINGS_ENABLED: "true"
+    command:
+      - sh
+      - -c
+      - alembic upgrade head && python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request; key=os.getenv('API_KEY', ''); headers={'X-API-Key': key} if key else {}; request=urllib.request.Request('http://127.0.0.1:8000/api/v1/system/health', headers=headers); urllib.request.urlopen(request)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ""
+        VITE_API_KEY: ${API_KEY:-}
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  stride_postgres:

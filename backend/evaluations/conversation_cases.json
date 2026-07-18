@@ -1,0 +1,37 @@
+[
+  {
+    "query": "Compare TrailBlaze Running Shoes and Velocity Carbon Racer",
+    "intent": "compare",
+    "expect": {
+      "intent": "compare",
+      "min_products": 2,
+      "requires_comparison": true
+    }
+  },
+  {
+    "query": "Recommend a yoga mat for daily practice",
+    "intent": "recommend",
+    "expect": {
+      "intent": "recommend",
+      "expected_product": "FlexForm Yoga Mat",
+      "requires_recommendation": true
+    }
+  },
+  {
+    "query": "Plan a fitness kit under 150",
+    "intent": "plan",
+    "expect": {
+      "intent": "plan",
+      "max_total": 150,
+      "requires_plan": true
+    }
+  },
+  {
+    "query": "compare these mystery products",
+    "intent": "compare",
+    "expect": {
+      "intent": "compare",
+      "clarification": true
+    }
+  }
+]

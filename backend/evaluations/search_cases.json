@@ -1,0 +1,18 @@
+[
+  {
+    "query": "hydration for a long hike",
+    "expected_product": "Summit Insulated Bottle"
+  },
+  {
+    "query": "comfortable gear for stretching at home",
+    "expected_product": "FlexForm Yoga Mat"
+  },
+  {
+    "query": "a small quiet typing device",
+    "expected_product": "QuietKeys Wireless Keyboard"
+  },
+  {
+    "query": "carry-on bag for a weekend flight",
+    "expected_product": "Weekender Canvas Duffel"
+  }
+]
