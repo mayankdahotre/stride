@@ -1,2 +1,12 @@
+[project]
+name = "stride"
+version = "0.1.0"
+description = "Stride backend"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # List your Python dependencies here (e.g., fastapi, uvicorn, etc.)
+]
+
 [tool.vercel]
 entrypoint = "backend.app.main:app"
