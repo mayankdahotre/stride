@@ -8,6 +8,7 @@ from app.graph.gateway import (
     IntentDecision,
     gateway,
 )
+from app.graph.prompts import EXPLAIN_SYSTEM, EXTRACT_SYSTEM, INTENT_SYSTEM
 from app.graph.state import CommerceState, Intent
 
 INTENT_WORDS: tuple[tuple[Intent, tuple[str, ...]], ...] = (
@@ -54,7 +55,7 @@ async def classify_and_extract(state: CommerceState) -> dict[str, object]:
         try:
             decision = await gateway.structured(
                 IntentDecision,
-                "Classify into exactly one intent: search, compare, recommend, plan.",
+                INTENT_SYSTEM,
                 state["content"],
             )
             intent = decision.intent
@@ -65,7 +66,7 @@ async def classify_and_extract(state: CommerceState) -> dict[str, object]:
     try:
         model_extraction = await gateway.structured(
             CommerceExtraction,
-            "Extract only stated shopping constraints. Never invent product IDs.",
+            EXTRACT_SYSTEM,
             state["content"],
         )
         extracted = model_extraction.model_dump()
@@ -197,10 +198,7 @@ async def explain_node(state: CommerceState) -> dict[str, object]:
     try:
         result = await gateway.structured(
             Explanation,
-            (
-                "Explain the supplied deterministic commerce result concisely. "
-                "Do not add products, prices, IDs, or facts."
-            ),
+            EXPLAIN_SYSTEM,
             json.dumps(facts, default=str),
         )
         return {"content_out": result.explanation}

@@ -130,7 +130,9 @@ class ConversationRepository:
                 cached = self.get_cached(thread_id, request_id)
                 if cached is not None:
                     return cached
-                raise
+                with _memory_lock:
+                    if thread_id not in _memory_threads:
+                        raise
         with _memory_lock:
             thread = _memory_threads[thread_id]
             now = datetime.now(UTC)

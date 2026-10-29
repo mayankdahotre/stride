@@ -1,0 +1,50 @@
+# API and pgvector only. The frontend is deployed separately on Vercel.
+# Copy the production keys into .env first: POSTGRES_PASSWORD and CORS_ORIGINS.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: stride_db
+      POSTGRES_USER: stride
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - stride_postgres_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stride -d stride_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        INSTALL_EMBEDDINGS: "false"
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://stride:${POSTGRES_PASSWORD}@db:5432/stride_db
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS in .env to the Vercel origin}
+      API_KEY: ${API_KEY:-}
+      CONVERSATIONAL_MODEL_ENABLED: "false"
+      EMBEDDINGS_ENABLED: "false"
+      LANGGRAPH_POSTGRES_CHECKPOINTER: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request; key=os.getenv('API_KEY', ''); headers={'X-API-Key': key} if key else {}; request=urllib.request.Request('http://127.0.0.1:8000/api/v1/system/health', headers=headers); urllib.request.urlopen(request)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  stride_postgres_prod:
